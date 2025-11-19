@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>اختبار صورة تيك توك</title>
+<style>
+    body { font-family: Arial; direction: rtl; text-align: right; padding: 30px; }
+    #profileImage {
+        width: 150px;
+        height: 150px;
+        border-radius: 20px;
+        border: 3px solid #000;
+        display: none;
+        object-fit: cover;
+        margin-top: 20px;
+    }
+</style>
+</head>
+<body>
+
+<h2>اختبار جلب صورة بروفايل تيك توك</h2>
+
+<input id="username" type="text" placeholder="اكتب اليوزر هنا..." 
+style="padding: 10px; width: 250px; font-size: 16px;" />
+
+<br><br>
+
+<img id="profileImage" src="" />
+
+<script>
+async function fetchTikTokPhoto(username){
+    try {
+        const url = `https://tiktok-data-api2.p.rapidapi.com/user/detail?username=${username}`;
+
+        const res = await fetch(url, {
+            method: "GET",
+            headers: {
+                "x-rapidapi-host": "tiktok-data-api2.p.rapidapi.com",
+                "x-rapidapi-key": "db18fb09e0msh03b032ad65b74e4p15e635jsn2c4b4805d7ba"
+            }
+        });
+
+        const data = await res.json();
+        console.log(data);
+
+        if(data?.data?.user?.avatarLarger){
+            let img = document.getElementById("profileImage");
+            img.src = data.data.user.avatarLarger;
+            img.style.display = "block";
+        } else {
+            document.getElementById("profileImage").style.display = "none";
+        }
+
+    } catch (e) {
+        console.log("Error:", e);
+    }
+}
+
+document.getElementById("username").addEventListener("input", function(){
+    let u = this.value.replace("@","").trim();
+    if(u.length > 1){
+        fetchTikTokPhoto(u);
+    } else {
+        document.getElementById("profileImage").style.display = "none";
+    }
+});
+</script>
+
+</body>
+</html>
