@@ -1,70 +1,909 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>اختبار صورة تيك توك</title>
-<style>
-    body { font-family: Arial; direction: rtl; text-align: right; padding: 30px; }
-    #profileImage {
-        width: 150px;
-        height: 150px;
-        border-radius: 20px;
-        border: 3px solid #000;
-        display: none;
-        object-fit: cover;
-        margin-top: 20px;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Get Coins</title>
+  <style>
+    :root{
+      --bg: #ffffff;
+      --text: #111827;
+      --subtext: #6b7280;
+      --muted: #9ca3af;
+      --primary: #111827;
+      --accent: #0ea5e9;
+      --danger: #ef4444;
+      --border: #e5e7eb;
+      --card: #ffffff;
+      --coin: #f59e0b;
+      --focus: #2563eb33;
+      --radius: 14px;
+      --shadow: 0 10px 25px rgba(0,0,0,0.05);
     }
-</style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.35;
+      direction: rtl;
+    }
+
+    /* App bar */
+    .appbar{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      display: grid;
+      grid-template-columns: 56px 1fr 56px;
+      align-items: center;
+    }
+    .appbar .left, .appbar .right{
+      display:flex; align-items:center; justify-content:center;
+    }
+    .appbar h1{
+      margin:0; text-align:center; font-size: 18px; font-weight: 600;
+    }
+    .icon-btn{
+      width: 36px; height:36px; border-radius: 999px;
+      display:flex; align-items:center; justify-content:center;
+      color: var(--text);
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .icon-btn:hover{ background: #f8fafc; border-color: var(--border); }
+
+    /* Container */
+    .container{
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px;
+      padding-bottom: 120px; /* room for sticky footer */
+    }
+
+    /* Account row */
+    .row{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 14px;
+      display:flex; align-items: center; gap: 12px;
+      box-shadow: var(--shadow);
+    }
+    .avatar{
+      width: 40px; height: 40px; border-radius: 999px; flex: 0 0 auto;
+      background: #111; color: #fff; display:flex; align-items:center; justify-content:center; font-weight:700;
+      overflow: hidden;
+    }
+    .avatar img{ width:100%; height:100%; object-fit: cover; display:block; }
+    .row .meta{ flex: 1; min-width: 0; }
+    .title{ font-weight: 600; font-size: 15px; }
+    .subtitle{ color: var(--subtext); font-size: 13px; margin-top:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:8px; }
+    .chev{ color: var(--muted); }
+
+    /* Inputs */
+    .section-title{ margin: 14px 2px 6px; font-weight: 600; font-size: 14px; color: var(--text); }
+    .text-field{
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+    .text-field input{
+      width:100%; border:0; outline:0; padding: 14px 14px;
+      font-size: 15px; background: transparent; color: var(--text);
+    }
+    .text-field:focus-within{ border-color: #cbd5e1; box-shadow: 0 0 0 6px var(--focus); }
+
+    .note{
+      color: var(--danger);
+      font-size: 13px;
+      margin: 6px 2px 10px;
+      font-weight: 600;
+    }
+
+    /* Pricing grid */
+    .grid{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    @media (min-width: 640px){
+      .grid{ grid-template-columns: repeat(3, 1fr); }
+    }
+    .card{
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform .05s ease, border-color .15s ease, box-shadow .15s ease;
+      user-select: none;
+      text-align: right;
+    }
+    .card:hover{ transform: translateY(-1px); }
+    .card.selected{
+      border-color: var(--accent);
+      box-shadow: 0 10px 25px rgba(14,165,233,0.15);
+    }
+    .card .top{
+      display:flex; align-items:center; justify-content: space-between; gap:10px;
+    }
+    .coins{
+      display:flex; align-items:center; gap: 8px; font-weight:700; font-size: 16px;
+    }
+    .coin-icon{
+      width: 26px; height:26px; border-radius:999px; background: var(--coin);
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.6), 0 1px 2px rgba(0,0,0,0.15);
+      color:#7c4a00; font-weight: 900; font-size: 13px;
+    }
+    .price{ color: var(--subtext); font-weight: 600; font-size: 14px; }
+
+    /* Custom amount */
+    .custom{
+      display:flex; align-items:center; gap:10px;
+    }
+    .custom input[type="number"]{
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 12px;
+      font-size: 15px;
+      outline: none;
+      background: #fff;
+      direction: ltr;
+      text-align: left;
+    }
+    .custom input[type="number"]:focus{
+      border-color: #cbd5e1; box-shadow: 0 0 0 6px var(--focus);
+    }
+    .hint{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    /* Footer / action */
+    .footer{
+      position: sticky;
+      bottom: 0;
+      border-top: 1px solid var(--border);
+      background: #ffffffd9;
+      backdrop-filter: blur(10px);
+    }
+    .footer-inner{
+      max-width: 720px; margin: 0 auto; padding: 12px 16px;
+      display:flex; align-items:center; gap: 12px;
+    }
+    .summary{
+      flex:1; font-size: 14px; color: var(--subtext);
+    }
+    .primary-btn{
+      padding: 12px 18px; border-radius: 12px; border: 0; cursor: pointer;
+      background: var(--danger); color: white; font-weight: 700; font-size: 15px;
+      box-shadow: 0 10px 25px rgba(239,68,68,0.25);
+      transition: transform .05s ease, opacity .2s ease;
+    }
+    .primary-btn:disabled{
+      opacity: .6; cursor: not-allowed; box-shadow: none;
+    }
+
+    /* Utilities */
+    .spacer{ height: 10px; }
+    .sr-only{
+      position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); border:0;
+    }
+    a.clean { color: inherit; text-decoration: none; }
+
+    /* Modal (order summary) */
+    .overlay{
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: end; justify-content: center; z-index: 50;
+    }
+    .overlay.show{ display:flex; }
+    .sheet{
+      width: 100%; max-width: 720px; background: #fff; border-radius: 12px 12px 0 0; padding: 18px; box-shadow: 0 -10px 40px rgba(0,0,0,0.25);
+      transform: translateY(0);
+      animation: slideUp .22s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+    .order-title{ font-weight:700; font-size:16px; margin-bottom:8px; text-align:center; }
+    .order-row{ display:flex; align-items:center; justify-content: space-between; padding:8px 0; border-bottom: 1px solid #f1f5f9; }
+    .order-total{ font-weight:800; font-size:18px; }
+    .card-masked{ color: var(--subtext); font-size:13px; margin-top:6px; }
+
+    .pay-now{
+      width:100%; margin-top:12px; padding:12px; border-radius:10px; border:0; background: var(--danger); color:#fff; font-weight:800; font-size:16px;
+    }
+    .modal-note{ color:var(--muted); font-size:12px; margin-top:8px; }
+    .close-sheet{ position:absolute; right: 12px; top: 8px; background: transparent; border:0; font-size:20px; cursor:pointer; color:var(--muted); }
+    .insufficient{ color: var(--danger); font-weight:700; margin-top:6px; display:none; }
+    .insufficient.show{ display:block; }
+    .add-balance-row{ display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+    .add-input{ width:120px; padding:8px; border-radius:8px; border:1px solid var(--border); direction:ltr; text-align:left; }
+    .small-btn{ padding:8px 10px; border-radius:8px; background:#111827; color:#fff; border:0; cursor:pointer; }
+
+    /* Loader & success (improved) */
+    #loaderOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.95);
+      z-index: 10000;
+      flex-direction: column;
+      font-weight: 700;
+      gap: 14px;
+      padding: 20px;
+    }
+    #loaderOverlay.show { display:flex; }
+
+    .loader-container {
+      width: 320px;
+      max-width: calc(100% - 40px);
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 12px;
+    }
+
+    .loader-spinner {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #f1f1f1;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader-title { font-size:16px; font-weight:800; color:var(--text); }
+    .loader-sub { font-size:13px; color:var(--muted); }
+
+    /* progress bar */
+    .progress-wrap {
+      width: 100%;
+      height: 10px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg,var(--accent), #60a5fa);
+      transition: width 0.25s linear;
+    }
+
+    /* Success overlay */
+    #successOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.95);
+      z-index: 10001;
+      flex-direction: column;
+      font-weight: 800;
+      gap: 12px;
+      padding: 20px;
+    }
+    #successOverlay.show { display:flex; }
+
+    .success-card {
+      width: 340px;
+      max-width: calc(100% - 40px);
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      text-align:center;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+    }
+
+    .checkmark {
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .checkmark svg { width:36px; height:36px; }
+    .success-title { font-size:18px; color:#0f766e; font-weight:900; }
+    .success-sub { font-size:13px; color:var(--muted); }
+
+    /* animated check stroke */
+    .check-svg path {
+      stroke: #047857;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 60;
+      stroke-dashoffset: 60;
+      animation: drawCheck 500ms ease forwards 150ms;
+    }
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .success-actions { display:flex; gap:8px; margin-top:4px; }
+    .btn-close { padding:8px 12px; border-radius:8px; border:0; background:#e5e7eb; font-weight:700; cursor:pointer; }
+    .btn-receipt { padding:8px 12px; border-radius:8px; border:0; background: #10b981; color:#fff; font-weight:700; cursor:pointer; }
+
+    /* minor responsive */
+    @media (max-width:420px){
+      .loader-container, .success-card { width: 92%; padding: 14px; }
+    }
+  </style>
 </head>
 <body>
+  <!-- App Bar -->
+  <header class="appbar" role="banner" aria-label="App Bar">
+    <div class="left">
+      <button class="icon-btn" title="Back" aria-label="Back" onclick="history.back()">
+        <!-- left arrow -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+    </div>
+    <h1>Get Coins</h1>
+    <div class="right">
+      <button class="icon-btn" title="Help" aria-label="Help">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M9.09 9a3 3 0 015.83 1c0 2-3 2-3 4"></path>
+          <line x1="12" y1="17" x2="12" y2="17"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
 
-<h2>اختبار جلب صورة بروفايل تيك توك</h2>
+  <main class="container">
+    <!-- Account row -->
+    <section class="row" aria-label="Account">
+      <div class="avatar" title="Coin Logo">
+        <!-- ضع صورتك هنا باسم logo.png -->
+        <img src="logo.png" alt="Logo (logo.png)" onerror="this.style.display='none'"/>
+      </div>
+      <div class="meta">
+        <div class="title">Recharge</div>
+        <div class="subtitle" id="balance">
+          <!-- هنا سيعرض الرصيد بشكل منسق مع صورة العملة -->
+          <img src="coin.png" alt="Coin (coin.png)" style="width:18px;height:18px;vertical-align:middle;margin-left:6px" onerror="this.style.display='none'"/>
+          <span id="balanceText">20,000,000</span>
+        </div>
+      </div>
+      <div class="chev" aria-hidden="true">
+        <!-- هذا الزر يسمح باضافة رصيد -->
+        <button class="icon-btn" title="Add balance" aria-label="Add balance" id="addBalanceBtn">
+          <!-- رمز السهم / اضافة -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+      </div>
+    </section>
 
-<input id="username" type="text" placeholder="اكتب اليوزر هنا..." 
-style="padding: 10px; width: 250px; font-size: 16px;" />
+    <!-- Username -->
+    <div class="section-title">Username</div>
+    <label class="text-field" aria-label="Username input">
+      <span class="sr-only">Username</span>
+      <input id="username" type="text" inputmode="text" autocomplete="off" placeholder="@username" />
+    </label>
 
-<br><br>
+    <div class="section-title">Recharge</div>
+    <p class="note">Save around 25% with a lower third-party service fee</p>
 
-<img id="profileImage" src="" />
+    <!-- Pricing grid -->
+    <section class="grid" id="grid" aria-label="Coin packages">
+      <!-- Cards inserted by JS -->
+    </section>
 
-<script>
-async function fetchTikTokPhoto(username){
-    try {
-        const url = `https://tiktok-data-api2.p.rapidapi.com/user/detail?username=${username}`;
+    <div class="spacer"></div>
 
-        const res = await fetch(url, {
-            method: "GET",
-            headers: {
-                "x-rapidapi-host": "tiktok-data-api2.p.rapidapi.com",
-                "x-rapidapi-key": "db18fb09e0msh03b032ad65b74e4p15e635jsn2c4b4805d7ba"
-            }
-        });
+    <!-- Custom amount -->
+    <section class="card" aria-label="Custom amount">
+      <div class="custom">
+        <div class="coins" style="flex:0 0 auto;">
+          <!-- ضع ايقونة العملة باسم coin.png -->
+          <img src="coin.png" alt="coin" style="width:26px;height:26px;border-radius:999px;object-fit:cover;" onerror="this.style.display='none'"/>
+          <span>Custom Coin</span>
+        </div>
+        <input id="customAmount" type="number" min="0" step="1" placeholder="customAmount" />
+      </div>
+      <div class="hint" id="customHint">Price: $0.00</div>
+    </section>
+  </main>
 
-        const data = await res.json();
-        console.log(data);
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="summary" id="summary">No package selected</div>
+      <button id="proceedBtn" class="primary-btn" disabled>Proceed</button>
+    </div>
+  </footer>
 
-        if(data?.data?.user?.avatarLarger){
-            let img = document.getElementById("profileImage");
-            img.src = data.data.user.avatarLarger;
-            img.style.display = "block";
-        } else {
-            document.getElementById("profileImage").style.display = "none";
-        }
+  <!-- Overlay / Sheet for Order Summary + Add Balance -->
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" id="sheet">
+      <button class="close-sheet" id="closeSheet" title="Close">✕</button>
 
-    } catch (e) {
-        console.log("Error:", e);
+      <div id="sheetContent">
+        <!-- Content dynamically injected -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Simple prompt for adding balance (inline small modal) -->
+  <div style="position:fixed; left:16px; bottom:96px; z-index:60; display:none;" id="addBalancePanel">
+    <div style="background:#fff;border-radius:10px;padding:10px;box-shadow:var(--shadow);border:1px solid var(--border);">
+      <div class="add-balance-row">
+        <input id="addBalanceInput" class="add-input" type="number" min="0" placeholder="Coins to add" />
+        <button id="confirmAddBtn" class="small-btn">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Improved Loader Overlay -->
+  <div id="loaderOverlay" aria-hidden="true" role="status" aria-live="polite">
+    <div class="loader-container" role="presentation" aria-hidden="true">
+      <div class="loader-spinner" aria-hidden="true"></div>
+      <div class="loader-title">Processing your purchase</div>
+      <div class="loader-sub">Please wait — this usually takes a few seconds</div>
+      <div class="progress-wrap" aria-hidden="true">
+        <div class="progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Improved Success Overlay -->
+  <div id="successOverlay" aria-hidden="true" role="status" aria-live="polite">
+    <div class="success-card" role="dialog" aria-modal="true">
+      <div class="checkmark" aria-hidden="true">
+        <svg class="check-svg" viewBox="0 0 52 52">
+          <path d="M14 27 L22 34 L38 18" fill="none" />
+        </svg>
+      </div>
+      <div class="success-title" id="successTitle">Recharge completed</div>
+      <div class="success-sub" id="successSub">Coins were added successfully to your account.</div>
+      <div style="font-size:13px;color:var(--muted);"> <span id="successAmount"></span> — <span id="successAccount"></span></div>
+      <div class="success-actions">
+        <button class="btn-close" id="closeSuccessBtn">Close</button>
+        <button class="btn-receipt" id="viewReceiptBtn">View receipt</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    // Pricing logic: base on 70 coins = $0.74
+    const UNIT_PRICE = 0.74 / 70; // ≈ 0.0105714286 per coin
+    const TIERS = [70, 350, 700, 1400, 3500, 30000];
+    const grid = document.getElementById('grid');
+    const summary = document.getElementById('summary');
+    const proceedBtn = document.getElementById('proceedBtn');
+    const usernameInput = document.getElementById('username');
+    const customAmount = document.getElementById('customAmount');
+    const customHint = document.getElementById('customHint');
+    const balanceEl = document.getElementById('balanceText');
+
+    // Modal elements
+    const overlay = document.getElementById('overlay');
+    const sheetContent = document.getElementById('sheetContent');
+    const closeSheet = document.getElementById('closeSheet');
+
+    // Add balance panel
+    const addBalanceBtn = document.getElementById('addBalanceBtn');
+    const addBalancePanel = document.getElementById('addBalancePanel');
+    const addBalanceInput = document.getElementById('addBalanceInput');
+    const confirmAddBtn = document.getElementById('confirmAddBtn');
+
+    // Loader & success elements
+    const loaderOverlay = document.getElementById('loaderOverlay');
+    const successOverlay = document.getElementById('successOverlay');
+    const progressBar = document.getElementById('progressBar');
+    const successTitle = document.getElementById('successTitle');
+    const successSub = document.getElementById('successSub');
+    const successAmount = document.getElementById('successAmount');
+    const successAccount = document.getElementById('successAccount');
+    const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+    const viewReceiptBtn = document.getElementById('viewReceiptBtn');
+
+    // Format numbers and prices
+    const nf = new Intl.NumberFormat('en-US');
+    function formatPrice(n){
+      let s = (Math.round(n * 100) / 100).toFixed(2);
+      s = s.replace(/\.00$/,'').replace(/(\.\d)0$/,'$1');
+      return s;
     }
+
+    // State
+    let selected = null; // { type:'tier'|'custom', coins:number, price:number }
+    let balanceCoins = 20000000; // initial balance (integer)
+    const MAX_CUSTOM = 2_500_000;
+
+    // Build tier cards
+    function cardTemplate(coins, price){
+      const card = document.createElement('button');
+      card.className = 'card';
+      card.type = 'button';
+      card.setAttribute('data-coins', coins);
+      card.innerHTML = `
+        <div class="top">
+          <div class="coins">
+            <div style="width:26px;height:26px;border-radius:999px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--coin);">
+              <img src="coin.png" alt="coin" style="width:27px;height:26px;object-fit:cover;" onerror="this.style.display='none'"/>
+            </div>
+            <span>${nf.format(coins)}</span>
+          </div>
+          <div class="price">$ ${formatPrice(price)}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        selectTier(coins, price);
+      });
+      return card;
+    }
+
+    function renderTiers(){
+      TIERS.forEach(c => {
+        const price = c * UNIT_PRICE;
+        grid.appendChild(cardTemplate(c, price));
+      });
+    }
+
+    function clearTierSelection(){
+      document.querySelectorAll('.card').forEach(el => el.classList.remove('selected'));
+    }
+
+    function selectTier(coins, price){
+      clearTierSelection();
+      // mark only the clicked tier (not the custom card)
+      [...grid.children].forEach(el=>{
+        if(Number(el.getAttribute('data-coins')) === coins){
+          el.classList.add('selected');
+        }
+      });
+      selected = { type: 'tier', coins, price };
+      customAmount.value = '';
+      updateSummary();
+    }
+
+    function selectCustom(coins){
+      clearTierSelection();
+      selected = (coins > 0) ? { type: 'custom', coins, price: coins * UNIT_PRICE } : null;
+      updateSummary();
+    }
+
+    function isFormValid(){
+      if(!selected) return false;
+      const uname = usernameInput.value.trim();
+      return uname.length > 0;
+    }
+
+    function updateSummary(){
+      if(!selected){
+        summary.textContent = 'No package selected';
+        proceedBtn.disabled = true;
+        return;
+      }
+      const coins = selected.coins;
+      const price = selected.price;
+      summary.textContent = `${nf.format(coins)} coins • $ ${formatPrice(price)}`;
+      proceedBtn.disabled = !isFormValid();
+    }
+
+    // Username listener
+    usernameInput.addEventListener('input', updateSummary);
+
+    // Custom amount handler
+    customAmount.addEventListener('input', () => {
+      let v = customAmount.value ? parseInt(customAmount.value, 10) : 0;
+      if(Number.isNaN(v)) v = 0;
+      if(v < 0) v = 0;
+      if(v > MAX_CUSTOM) v = MAX_CUSTOM;
+      if(String(v) !== customAmount.value) customAmount.value = v;
+      const price = v * UNIT_PRICE;
+      customHint.textContent = `Price: $ ${formatPrice(price)}`;
+      selectCustom(v);
+    });
+
+    // Proceed -> show order summary sheet
+    proceedBtn.addEventListener('click', () => {
+      if(!isFormValid()) return;
+      showOrderSheet();
+    });
+
+    function showOrderSheet(){
+      if(!selected) return;
+      const uname = usernameInput.value.trim();
+      const coins = selected.coins;
+      const price = selected.price;
+      const enough = balanceCoins >= coins;
+
+      sheetContent.innerHTML = `
+        <div style="position:relative;">
+          <div class="order-title">Order summary</div>
+          <div class="order-row"><div>Account</div><div style="font-weight:700">@${escapeHtml(uname)}</div></div>
+          <div class="order-row"><div>${nf.format(coins)} Coins</div><div class="order-total">$ ${formatPrice(price)}</div></div>
+          <div class="order-row"><div>Total</div><div style="font-weight:800">$ ${formatPrice(price)}</div></div>
+          <div style="padding-top:10px;">
+            <div class="card-masked">VISA  ******6422</div>
+            <div class="modal-note">By clicking "Pay now", you agree to our Terms of Purchase for Coins. By using any amount of Coins within 14 days after clicking "Pay Now", you acknowledge and confirm that you will no longer be eligible for a refund of this order.</div>
+          </div>
+
+          <div class="insufficient ${enough ? '' : 'show'}" id="insufficientMsg">Insufficient balance to pay for this purchase.</div>
+
+          <button id="payNowBtn" class="pay-now" ${enough ? '' : 'disabled'}>${enough ? 'Pay now' : 'Not enough balance'}</button>
+          <div style="display:flex; gap:8px; margin-top:10px; justify-content:space-between; align-items:center;">
+            <div style="color:var(--muted); font-size:12px;">Current balance: ${nf.format(balanceCoins)} coins</div>
+            <div style="font-size:12px; color:var(--muted);">Price: $ ${formatPrice(price)}</div>
+          </div>
+        </div>
+      `;
+
+      // wire pay now (improved: show progress bar for 3s then show enhanced success)
+      const payNowBtn = document.getElementById('payNowBtn');
+      if(payNowBtn){
+        payNowBtn.addEventListener('click', () => {
+          if(balanceCoins >= coins){
+            // close sheet first
+            closeSheetFunc();
+
+            // show loader overlay + animate progress bar for 3 seconds
+            loaderOverlay.setAttribute('aria-hidden','false');
+            loaderOverlay.classList.add('show');
+
+            // reset progress bar
+            progressBar.style.width = '0%';
+
+            // animate progress smoothly over 3000ms
+            const duration = 3000;
+            const start = Date.now();
+            function step(){
+              const elapsed = Date.now() - start;
+              let pct = Math.min(100, Math.round((elapsed / duration) * 100));
+              progressBar.style.width = pct + '%';
+              if(elapsed < duration){
+                requestAnimationFrame(step);
+              } else {
+                // finish: hide loader, show success
+                loaderOverlay.classList.remove('show');
+                loaderOverlay.setAttribute('aria-hidden','true');
+
+                // prepare success text
+                successAmount.textContent = `${nf.format(coins)} coins`;
+                successAccount.textContent = `@${escapeHtml(usernameInput.value.trim())}`;
+                successTitle.textContent = 'Recharge completed';
+                successSub.textContent = `Your ${nf.format(coins)} coins have been added.`;
+
+                // show success overlay
+                successOverlay.setAttribute('aria-hidden','false');
+                successOverlay.classList.add('show');
+
+                // apply balance update and reset UI (after brief pause so user sees success)
+                balanceCoins -= coins;
+                updateBalanceUI();
+
+                // clear username as before
+                usernameInput.value = '';
+                selected = null;
+                clearTierSelection();
+                customAmount.value = '';
+                customHint.textContent = `Price: $0.00`;
+                updateSummary();
+
+                // allow user to close success manually; auto-dismiss after 2200ms
+                const autoHide = setTimeout(() => {
+                  if(successOverlay.classList.contains('show')){
+                    successOverlay.classList.remove('show');
+                    successOverlay.setAttribute('aria-hidden','true');
+                  }
+                }, 2200);
+
+                // if user clicks close earlier, cancel timeout
+                function hideSuccess(){
+                  clearTimeout(autoHide);
+                  successOverlay.classList.remove('show');
+                  successOverlay.setAttribute('aria-hidden','true');
+                }
+                closeSuccessBtn.onclick = hideSuccess;
+                viewReceiptBtn.onclick = function(){
+                  // for now just show a simple alert receipt (keeps changes minimal)
+                  hideSuccess();
+                  setTimeout(()=> {
+                    alert(`Receipt\nAccount: @${escapeHtml(successAccount.textContent)}\nAmount: ${successAmount.textContent}`);
+                  }, 200);
+                };
+              }
+            }
+            requestAnimationFrame(step);
+
+          } else {
+            const ins = document.getElementById('insufficientMsg');
+            ins.classList.add('show');
+            payNowBtn.disabled = true;
+          }
+        });
+      }
+
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeSheetFunc(){
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    closeSheet.addEventListener('click', closeSheetFunc);
+    overlay.addEventListener('click', (e) => {
+      if(e.target === overlay) closeSheetFunc();
+    });
+
+    // Escape key closes modal
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') closeSheetFunc();
+    });
+
+    // Add balance toggle
+    let addPanelVisible = false;
+    addBalanceBtn.addEventListener('click', () => {
+      addPanelVisible = !addPanelVisible;
+      addBalancePanel.style.display = addPanelVisible ? 'block' : 'none';
+      if(addPanelVisible) addBalanceInput.focus();
+    });
+
+    confirmAddBtn.addEventListener('click', () => {
+      let v = parseInt(addBalanceInput.value || '0', 10);
+      if(Number.isNaN(v) || v <= 0){
+        alert('Enter a positive number of coins to add.');
+        return;
+      }
+      // simple simulate adding balance
+      balanceCoins += v;
+      updateBalanceUI();
+      addBalanceInput.value = '';
+      addBalancePanel.style.display = 'none';
+      addPanelVisible = false;
+      alert(`Added ${nf.format(v)} coins to your balance.`);
+    });
+
+    // helper: update balance display
+    function updateBalanceUI(){
+      balanceEl.textContent = nf.format(balanceCoins);
+    }
+
+    // sanitize text for display
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"]/g, (s) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
+    }
+
+    // Initialize
+    renderTiers();
+    // Pre-select the first tier for convenience
+    selectTier(70, 70 * UNIT_PRICE);
+    updateBalanceUI();
+
+    // Optional: ensure proceed button disabled state reacts to username + selection
+    (function watchForm(){
+      const obs = new MutationObserver(updateSummary);
+      obs.observe(document.getElementById('grid'), { childList: true, subtree: true });
+    })();
+  </script>
+
+  
+  <!-- Numeric Keyboard Popup -->
+ <div id="keyboardPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center;animation:slideUpKeyboard .25s ease;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;padding:15px;box-shadow:0 -8px 20px rgba(0,0,0,0.25);width:100%;max-width:400px;text-align:center;">
+    <button id="closeKeyboard" style="position:absolute;top:8px;right:12px;background:transparent;border:0;font-size:22px;cursor:pointer;">✕</button>
+    <div style="font-weight:700;font-size:16px;margin-bottom:8px;">Custom Coin</div>
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:10px;margin-bottom:10px;">
+      <div style="font-weight:600;color:#9ca3af;font-size:13px;margin-bottom:4px;">Total</div>
+      <div style="display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;min-height:40px;color:#111827;">
+        <img src='coin.png' alt='coin' style='width:26px;height:26px;margin-left:8px;'>
+        <span id="coinValue" style="color:#111827;">30–2,500,000</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">1</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">2</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">3</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">4</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">5</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">6</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">7</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">8</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">9</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">000</button>
+      <button class="key" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f3f4f6;cursor:pointer;">0</button>
+      <button id="deleteKey" style="padding:16px;font-size:18px;border:none;border-radius:12px;background:#f87171;color:#fff;cursor:pointer;">⌫</button>
+    </div>
+    <button id="confirmAmount" style="margin-top:12px;padding:12px 20px;border-radius:10px;background:var(--danger);color:#fff;font-weight:700;border:0;cursor:pointer;">Confirm</button>
+  </div>
+</div>
+
+<style>
+@keyframes slideUpKeyboard {
+  from { transform: translateY(100%); opacity:0; }
+  to { transform: translateY(0); opacity:1; }
 }
 
-document.getElementById("username").addEventListener("input", function(){
-    let u = this.value.replace("@","").trim();
-    if(u.length > 1){
-        fetchTikTokPhoto(u);
-    } else {
-        document.getElementById("profileImage").style.display = "none";
-    }
+/* اجعل كل خلفية الكيبورد مظللة بالكامل */
+#keyboardPopup {
+  background: rgba(0,0,0,0.4);
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const customInput = document.getElementById('customAmount');
+  const popup = document.getElementById('keyboardPopup');
+  const closeBtn = document.getElementById('closeKeyboard');
+  const keys = popup.querySelectorAll('.key');
+  const deleteKey = document.getElementById('deleteKey');
+  const coinValue = document.getElementById('coinValue');
+  const confirmBtn = document.getElementById('confirmAmount');
+
+  let currentVal = '';
+
+  // منع الكيبورد الأصلي للجوال
+  customInput.setAttribute('readonly', true);
+
+  customInput.addEventListener('focus', ()=>{
+    popup.style.display = 'flex';
+  });
+
+  closeBtn.addEventListener('click', ()=>{
+    popup.style.display = 'none';
+    currentVal = '';
+    coinValue.textContent = '0';
+  });
+
+  keys.forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      currentVal += btn.textContent;
+      coinValue.textContent = currentVal || '0';
+      coinValue.style.color = '#111827'; // واضح الرقم
+    });
+  });
+
+  deleteKey.addEventListener('click', ()=>{
+    currentVal = currentVal.slice(0, -1);
+    coinValue.textContent = currentVal || '0';
+  });
+
+  confirmBtn.addEventListener('click', ()=>{
+    customInput.value = currentVal;
+    customInput.dispatchEvent(new Event('input'));
+    popup.style.display = 'none';
+  });
 });
 </script>
 
-</body>
 </html>
